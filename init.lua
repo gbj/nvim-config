@@ -1,10 +1,12 @@
+-- a nice home-row leader
 vim.g.mapleader = ';'
 
--- buffer navigation
+-- buffer navigation to switch between files
 vim.api.nvim_set_keymap("n", "<Tab>", "<cmd>:bnext<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<S-Tab>", "<cmd>:bprev<CR>", { noremap = true, silent = true })
 
 -- line numbers
+-- I like relative line numbers because they make jumps like 30j or 15k easier
 vim.wo.relativenumber = true
 vim.wo.number = true
 
@@ -13,6 +15,7 @@ require('kanagawa').setup({
 	transparent = true,
 	theme = "dragon",
 	colors = {
+		-- had to make the background a little darker for myself
 		palette = {
 			sumiInk0 = "#000000",
 			sumiInk1 = "#0B0B0E",
@@ -45,30 +48,34 @@ rt.setup({
 	server = {
 		settings = {
 			["rust-analyzer"] = {
-				-- Add clippy lints for Rust.
+				-- use clippy on save
 				checkOnSave = {
 					allFeatures = true,
 					command = "clippy",
 					extraArgs = { "--no-deps" },
 				},
+				-- expand proc macros
 				procMacro = {
 					enable = true 
 				},
+				-- activate all features of crates
 				cargo = {
 					allFeatures = true,
 				},
 			}
 		},
 		on_attach = function(_, bufnr)
+			-- gD/gd = go to declaration/definition
 			vim.api.nvim_set_keymap("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", { noremap = true, silent = true })
 			vim.api.nvim_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { noremap = true, silent = true })
-			-- Hover actions
+			-- K for hover
 			vim.keymap.set("n", "K", rt.hover_actions.hover_actions, { buffer = bufnr })
-			-- Code actions
+			-- leader-a for code actions
 			vim.keymap.set("n", "<Leader>a", rt.code_action_group.code_action_group, { buffer = bufnr })
 		end,
 	},
 	tools = {
+		-- this shows inline hints as virtual text, all right-aligned to one another, padded 2 chars from end of code
 		inlay_hints = {
 			max_len_align = true,
 			max_len_align_padding = 2
@@ -76,6 +83,7 @@ rt.setup({
 	}
 })
 
+-- rustfmt on save
 local format_sync_grp = vim.api.nvim_create_augroup("Format", {})
 vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = "*.rs",
@@ -113,12 +121,14 @@ vim.diagnostic.config({
     },
 })
 
+-- opens a float window for diagnostics when you keep cursor on them, including full text
 vim.cmd([[
 set signcolumn=yes
 autocmd CursorHold * lua vim.diagnostic.open_float(nil, { focusable = false })
 ]])
 
 -- diagnostics: trouble keymaps
+-- trouble is really nice for seeing multiple errors at once
 vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end)
 vim.keymap.set("n", "<leader>xw", function() require("trouble").toggle("workspace_diagnostics") end)
 vim.keymap.set("n", "<leader>xd", function() require("trouble").toggle("document_diagnostics") end)
@@ -134,6 +144,7 @@ local cmp = require'cmp'
 cmp.setup({
   -- Enable LSP snippets
   snippet = {
+    -- TODO: this function call seems to throw an error occasionally?
     expand = function(args)
         vim.fn["vsnip#anonymous"](args.body)
     end,
@@ -141,7 +152,6 @@ cmp.setup({
   mapping = {
     ['<C-p>'] = cmp.mapping.select_prev_item(),
     ['<C-n>'] = cmp.mapping.select_next_item(),
-    -- Add tab support
     ['<C-Space>'] = cmp.mapping.complete(),
     ['<C-e>'] = cmp.mapping.close(),
     ['<CR>'] = cmp.mapping.confirm({
